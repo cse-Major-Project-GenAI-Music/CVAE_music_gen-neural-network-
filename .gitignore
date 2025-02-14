@@ -1,0 +1,11 @@
+frontend/node_modules/
+
+backend/__pycache__
+backend/.ipynb_checkpoints
+backend/converted_to_wav_files/.ipynb_checkpoints
+backend/generated_midi_files/.ipynb_checkpoints
+backend/generated_mixed_music/.ipynb_checkpoints
+
+backend/cvae_full_checkpoint.pth
+backend/FluidR3_GM.sf2
+backend/tempCodeRunnerFile.py
