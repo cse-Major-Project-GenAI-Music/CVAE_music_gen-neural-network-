@@ -218,6 +218,8 @@ Processes an input `.wav` file, generates both monophonic and polyphonic music, 
 }
 ```
 
+---
+
 ### **2. /get_file (GET)**
 **Purpose:**  
 Retrieves a requested file from the server.
@@ -276,6 +278,8 @@ Defines the Conditional Variational Autoencoder (CVAE) model.
   - `condition_dim (int)`: Condition vector dimension.
 - **Output**: Initialized CVAE model.
 
+---
+
 ### **2. `encode(x, condition)`**
 - **Purpose**: Encodes an input sample into latent space.
 - **Functionality**:
@@ -287,6 +291,8 @@ Defines the Conditional Variational Autoencoder (CVAE) model.
   - `condition (torch.Tensor)`: Condition vector `[batch_size, 4]`.
 - **Output**: `(mu, logvar)`.
 
+---
+
 ### **3. `reparameterize(mu, logvar)`**
 - **Purpose**: Samples from the latent space.
 - **Functionality**:
@@ -294,6 +300,8 @@ Defines the Conditional Variational Autoencoder (CVAE) model.
 - **Input**:
   - `mu (torch.Tensor)`, `logvar (torch.Tensor)`.
 - **Output**: Latent vector `z`.
+
+---
 
 ### **4. `decode(z, condition)`**
 - **Purpose**: Decodes latent vectors into output.
@@ -305,6 +313,8 @@ Defines the Conditional Variational Autoencoder (CVAE) model.
   - `condition (torch.Tensor)`: `[batch_size, 4]`.
 - **Output**: Logits `[batch_size, 4, 300, 128]`.
 
+---
+
 ### **5. `forward(x, condition)`**
 - **Purpose**: Defines the forward pass.
 - **Functionality**:
@@ -314,6 +324,8 @@ Defines the Conditional Variational Autoencoder (CVAE) model.
 - **Input**: `x, condition`
 - **Output**: `(logits, mu, logvar)`.
 
+
+---
 
 
 ## **WrapperForCVAE.py**
@@ -329,10 +341,12 @@ This script provides a wrapper for the Conditional Variational Autoencoder (CVAE
 - **Input**: None
 - **Output**: The loaded `CVAE` model.
 
-### **2. `Wrapper` (Class)**
+---
+
+### **`Wrapper` (Class)**
 Encapsulates the `CVAE` model and provides methods for encoding, decoding, and interpolating latent space representations.
 
-### **3. `shapeIntoChannels(sample)`**
+#### **1. `shapeIntoChannels(sample)`**
 - **Purpose**: Converts input samples into one-hot encoded channels and generates a condition vector.
 - **Functionality**:
   - Converts the sample into long format.
@@ -343,7 +357,9 @@ Encapsulates the `CVAE` model and provides methods for encoding, decoding, and i
   - `channel_sample`: One-hot encoded tensor of shape `[4, 300, 128]`.
   - `condition`: Binary vector of shape `[4]`.
 
-### **4. `slerp(t, v0, v1)`**
+---
+
+#### **2. `slerp(t, v0, v1)`**
 - **Purpose**: Performs Spherical Linear Interpolation (SLERP) between two latent vectors.
 - **Functionality**:
   - Normalizes the vectors.
@@ -353,7 +369,9 @@ Encapsulates the `CVAE` model and provides methods for encoding, decoding, and i
   - `v0, v1 (torch.Tensor)`: Latent vectors.
 - **Output**: Interpolated latent vector.
 
-### **5. `interpolate(original, num_samples_required, decoder_condition)`**
+---
+
+#### **3. `interpolate(original, num_samples_required, decoder_condition)`**
 - **Purpose**: Encodes a sample, generates random latent vectors, interpolates using SLERP, and decodes under a specified condition.
 - **Functionality**:
   - Validates input tensor shape.
@@ -368,7 +386,9 @@ Encapsulates the `CVAE` model and provides methods for encoding, decoding, and i
 - **Output**: Dictionary containing:
   - `"generated_samples"`: Generated MIDI tensor of shape `[num_samples_required, 300, 128]`.
 
-### **6. `overlay_original_with_new_gen_samples(original, generated_samples)`**
+---
+
+#### **4. `overlay_original_with_new_gen_samples(original, generated_samples)`**
 - **Purpose**: Merges nonzero values from the original sample into the generated samples.
 - **Functionality**:
   - Uses `np.where` to replace zero values in generated samples with corresponding original values.
@@ -377,19 +397,25 @@ Encapsulates the `CVAE` model and provides methods for encoding, decoding, and i
   - `generated_samples (np.ndarray)`: Shape `[N, 300, 128]`, generated samples.
 - **Output**: Merged samples of shape `[N, 300, 128]`.
 
-### **7. `draw_midi_array(midi_array, TITLE, x_len, y_len)`**
+---
+
+#### **5. `draw_midi_array(midi_array, TITLE, x_len, y_len)`**
 - **Purpose**: Visualizes a MIDI array as a scatter plot.
 - **Input**: 
   - `midi_array (np.ndarray)`: Shape `[300, 128]`, MIDI representation.
   - `TITLE (str)`: Plot title.
 - **Output**: A scatter plot.
 
-### **8. `plot_samples(samples, x_len, y_len)`**
+---
+
+#### **6. `plot_samples(samples, x_len, y_len)`**
 - **Purpose**: Plots multiple MIDI samples.
 - **Functionality**:
   - Calls `draw_midi_array` for each sample.
 - **Input**: 
   - `samples (list of np.ndarray)`: List of MIDI samples.
+
+---
 
 
 
