@@ -216,7 +216,7 @@ Processes an input `.wav` file, generates both monophonic and polyphonic music, 
     "monophonic_paths": ["./outputs/mono_instrument1.wav", "./outputs/mono_instrument2.wav"],
     "polyphonic_paths": ["./outputs/poly_sample1.wav", "./outputs/poly_sample2.wav"]
 }
-
+```
 
 ### **2. /get_file (GET)**
 **Purpose:**  
