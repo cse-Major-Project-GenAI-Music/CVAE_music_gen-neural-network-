@@ -15,6 +15,10 @@ This document provides an overview of two model architectures used for music gen
 The CVAE model architecture is designed to generate music sequences by learning a compressed latent representation conditioned on specific inputs. The architecture uses convolutional and transposed convolutional layers to encode and decode the data efficiently.
 
 #### Architecture Overview:
+
+![CVAE Architecture](cvae.png)
+
+
 ```
 ===================================================================================================================
 Layer (type:depth-idx)                   Input Shape               Output Shape              Param #
@@ -47,6 +51,10 @@ Total mult-adds (M): 514.74
 The CLSTM model is designed to generate music sequences by leveraging the temporal dependencies in the data. It combines LSTM layers with transposed convolutional layers for efficient decoding.
 
 #### Architecture Overview:
+
+
+![CLSTM Architecture](clstm_decoder.png)
+
 ```
 ===================================================================================================================
 Layer (type:depth-idx)                   Input Shape               Output Shape              Param #
