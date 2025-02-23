@@ -1,6 +1,6 @@
 # Music Generation with CVAE and CLSTM
 
-This document provides an overview of two model architectures used for music generation: Conditional Variational Autoencoder (CVAE) and Conditional LSTM (CLSTM). You can view the detailed implementations and download the models from the following links:
+This document provides an overview of two model architectures used for music generation: Conditional Variational Autoencoder (CVAE) and Contextual LSTM (CLSTM). You can view the detailed implementations and download the models from the following links:
 
 - [Click to view 'Building CVAE'](https://www.kaggle.com/code/irohiwin/800-cvae-gen-music-1?scriptVersionId=222120120)
 - [Click to view 'Metrics for CVAE'](https://www.kaggle.com/code/irohiwin/measure-uniqueness-of-generated-samples-cvae/)
@@ -42,7 +42,7 @@ Total mult-adds (M): 514.74
 ===================================================================================================================
 ```
 
-### Conditional LSTM (CLSTM)
+### Contextual LSTM (CLSTM)
 
 The CLSTM model is designed to generate music sequences by leveraging the temporal dependencies in the data. It combines LSTM layers with transposed convolutional layers for efficient decoding.
 
@@ -51,7 +51,7 @@ The CLSTM model is designed to generate music sequences by leveraging the tempor
 ===================================================================================================================
 Layer (type:depth-idx)                   Input Shape               Output Shape              Param #
 ===================================================================================================================
-LSTM_Decoder                             [1, 64]                   [1, 4, 200, 128]          --
+CLSTM_Decoder                             [1, 64]                   [1, 4, 200, 128]          --
 ├─LSTM: 1-1                              [1, 1, 68]                [1, 1, 64]                34,304
 ├─Linear: 1-2                            [1, 68]                   [1, 51200]                3,532,800
 ├─ConvTranspose2d: 1-3                   [1, 128, 25, 16]          [1, 64, 50, 32]           73,792
