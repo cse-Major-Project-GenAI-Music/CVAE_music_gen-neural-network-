@@ -3,13 +3,17 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import numpy as np
 from ClassCVAE import CVAE
+from ClassCLSTM import CLSTM_Decoder
 
-def loadModel():
+def loadModel_CVAE():
    # Define the device for loading the model.
    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+   print("using device:", device)
+
+   cvae_path = r"D:\acadamics\codes1010\Major_MUSIC\codes\fullstack_me\backend\machine_learning_models\cvae_full_checkpoint.pth"
 
    # Load the checkpoint. Use map_location if needed.
-   checkpoint = torch.load(r"C:\Users\chint\Major_MUSIC\temporary_server\cvae_full_checkpoint.pth", weights_only=False, map_location=device)
+   checkpoint = torch.load(cvae_path, weights_only=False, map_location=device)
 
    # Retrieve saved hyperparameters.
    latent_dim = checkpoint['latent_dim']
@@ -20,15 +24,36 @@ def loadModel():
    model.to(device)
    model.eval()  # Set to evaluation mode.
 
-   print("Model loaded successfully for inference!")
+   print("CVAE Model loaded successfully for inference!")
 
    return model
+
+def loadModel_CLSTM():   
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # Define the checkpoint path.
+    clstm_path = r"D:\acadamics\codes1010\Major_MUSIC\codes\fullstack_me\backend\machine_learning_models\clstm_decoder_full_checkpoint.pth"
+
+    # Load the checkpoint dictionary.
+    checkpoint = torch.load(clstm_path, weights_only=False, map_location=device)  # adjust map_location as needed
+
+    # Extract hyperparameters from the checkpoint.
+    latent_dim = checkpoint['latent_dim']
+    condition_dim = checkpoint['condition_dim']
+
+    # Re-instantiate the model.
+    model = CLSTM_Decoder(latent_dim=latent_dim, condition_dim=condition_dim)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+
+    print("CLSTM Model loaded successfully!")
+    return model
 
 
 class Wrapper():
     def __init__(self):
         # Mapping from condition tuple to label name.
-        self.model = loadModel()
+        self.model_CVAE  = loadModel_CVAE()
+        self.model_CLSTM = loadModel_CLSTM()
         self.name_to_label = {
             (1, 1, 0, 0):  "piano",
             (1, 0, 1, 0):  "guitar",
@@ -83,7 +108,7 @@ class Wrapper():
     def interpolate(self, original, num_samples_required=1, decoder_condition=(1, 1, 1, 1)):
         """
         Encodes the original sample, generates random latent vectors, and uses SLERP
-        to combine the original latent vector with each random latent (using t=0.3).
+        to combine the original latent vector with each random latent (using t=0.6).
         The resulting latent vectors are then decoded under the specified condition.
         
         Args:
@@ -115,7 +140,7 @@ class Wrapper():
                                    .repeat(num_samples_required, 1).to(device)
             
             print('Generating random latent vectors...')
-            latent_dim = self.model.latent_dim  # Assumes model is defined globally.
+            latent_dim = self.model_CVAE.latent_dim  # Assumes model is defined globally.
             random_latents = torch.randn(num_samples_required, latent_dim).to(device)
             
             print('Processing original sample...')
@@ -124,8 +149,8 @@ class Wrapper():
             original_condition = original_condition.unsqueeze(0).to(device)  # (1, 4)
             
             print('Encoding original sample...')
-            mu, logvar = self.model.encode(channel_sample, original_condition)
-            original_latent = self.model.reparameterize(mu, logvar)  # Shape: (1, latent_dim)
+            mu, logvar = self.model_CVAE.encode(channel_sample, original_condition)
+            original_latent = self.model_CVAE.reparameterize(mu, logvar)  # Shape: (1, latent_dim)
             # print(f'Shape of original latent: {original_latent.shape}')
             # print(f'Shape of random latent vectors: {random_latents.shape}')
     
@@ -137,15 +162,22 @@ class Wrapper():
                 interpolated_latents.append(interp_latent.unsqueeze(0))
             interpolated_latents = torch.cat(interpolated_latents, dim=0)
     
-            print('Decoding interpolated latents...')
-            decoded_logits = self.model.decode(interpolated_latents, decoder_cond_tensor)
+            print('Decoding interpolated latents of first 30 seconds...')
+            decoded_logits = self.model_CVAE.decode(interpolated_latents, decoder_cond_tensor)
             # Convert logits to discrete labels.
             reconstructed_samples = torch.argmax(decoded_logits, dim=1)  # Shape: (num_samples_required, 300, 128)
+            
+            print('Predicting next 20 seconds of interpolated latents...')
+            predicted_logits = self.model_CLSTM(interpolated_latents, decoder_cond_tensor)
+            # Convert logits to discrete labels.
+            predicted_samples = torch.argmax(predicted_logits, dim=1)  # Shape: (num_samples_required, 200, 128)
         
+            generated_samples = torch.cat((reconstructed_samples, predicted_samples), dim=1)  # Shape: (num_samples_required, 500, 128)
+
             return {
                 "message": "interpolation completed",
                 "success": True,
-                "generated_samples": reconstructed_samples
+                "generated_samples": generated_samples
             }
         
         except Exception as e:
@@ -154,28 +186,31 @@ class Wrapper():
                 "success":  False
             }
     
+
     def overlay_original_with_new_gen_samples(self, original, generated_samples):
         """
-        Replace nonzero values in each sample of reconstructed_samples with the corresponding 
-        values from original.
-        
+        Expands original to (500, 128) and overlays it on each instance of generated_samples.
+
         Args:
-            original (np.ndarray): Array of shape [300, 128] containing the original sample.
-            generated_samples (np.ndarray): Array of shape [N, 300, 128] containing N generated samples.
-        
+            original (np.ndarray): Array of shape (300, 128) containing the original sample.
+            generated_samples (np.ndarray): Array of shape (N, 500, 128) containing N generated samples.
+
         Returns:
-            np.ndarray: New array of mixed samples with shape [N, 300, 128] where for each sample,
-                        at positions where original is nonzero, its value overwrites the generated sample.
+            np.ndarray: Modified array of shape (N, 500, 128) where original overwrites nonzero positions.
         """
-        # Ensure original and reconstructed_samples are numpy arrays.
-        original = np.array(original)
-        generated_samples = np.array(generated_samples)
-        
-        # Using broadcasting and np.where:
-        # For each sample in reconstructed_samples, wherever original != 0, take original; otherwise, use the reconstructed value.
-        mixed_samples = np.where(original != 0, original, generated_samples)
-        
+        # Ensure inputs are numpy arrays
+        original = np.array(original)  # Shape: (300, 128)
+        generated_samples = np.array(generated_samples)  # Shape: (N, 500, 128)
+
+        # Expand original to (500, 128) by appending (200, 128) zeros
+        padding = np.zeros((200, 128))  # Shape: (200, 128)
+        original_expanded = np.vstack((original, padding))  # Shape: (500, 128)
+
+        # Overlay original on every instance of generated_samples
+        mixed_samples = np.where(original_expanded != 0, original_expanded, generated_samples)
+
         return mixed_samples
+
 
     def draw_midi_array(self, midi_array, TITLE="", x_len=4, y_len=3):  
         name_of_instrument = {0: "none", 1: "piano", 2: "guitar", 3: "bass"}
@@ -201,7 +236,7 @@ class Wrapper():
         for i in range(len(samples)):
             self.draw_midi_array(samples[i], TITLE=f"music.{i+1} ", x_len=x_len, y_len=y_len)
     
-    def convert_smoothened_freq_to_matrix(self, data, x=1):
+    def convert_smoothened_freq_to_matrix(self, data, class_label=1):
       def frequency_to_midi(frequency):
          """Convert frequency (Hz) to the nearest MIDI note."""
          if np.isnan(frequency):
@@ -231,7 +266,7 @@ class Wrapper():
       for t, freq in zip(time_ms, frequency_array):
          midi_note = frequency_to_midi(freq)
          if 0 <= midi_note < num_notes:
-               tensor[t, midi_note] = x  # Mark note as active
+               tensor[t, midi_note] = class_label  # Mark note as active
          # If midi_note is -1, it remains all zero
       
       return tensor[::10] # returns shape of [300, 128]

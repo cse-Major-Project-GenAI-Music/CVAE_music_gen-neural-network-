@@ -2,7 +2,7 @@ from mido import Message, MidiFile, MidiTrack
 import torch 
 
 def generate_midi_from_matrix(sample, output_path):
-    """Generate a MIDI file from the given sample (300x128)."""
+    """Generate a MIDI file from the given sample (500x128)."""
     instrument_map = {1: 0, 2: 25, 3: 33}  # Map values to MIDI instruments
     midi_file = MidiFile()
     tracks = {instrument: MidiTrack() for instrument in instrument_map.values()}
@@ -16,7 +16,7 @@ def generate_midi_from_matrix(sample, output_path):
     sample = torch.tensor(sample)
     sample = sample.int()
     
-    for t in range(sample.shape[0]):  # Iterate over 300 timesteps
+    for t in range(sample.shape[0]):  # Iterate over 500 timesteps
         abs_time = t * 100  # Absolute time reference in MIDI ticks
         
         for note in range(sample.shape[1]):  # Iterate over 128 notes
@@ -47,7 +47,7 @@ def generate_midi_from_matrix(sample, output_path):
     for instrument, notes in active_notes.items():
         track = tracks[instrument]
         for note, start_time in notes.items():
-            track.append(Message('note_off', note=note, velocity=127, time=(300 - start_time) * 100))
+            track.append(Message('note_off', note=note, velocity=127, time=(500 - start_time) * 100))
     
     midi_file.save(output_path)
     print(f"MIDI file saved at {output_path}")

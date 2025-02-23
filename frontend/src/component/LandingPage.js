@@ -5,6 +5,9 @@ import OriginalAnnotationsImage from '../assets/Original_annotations.png'
 import ComparingImage from '../assets/Compare_detected_vs_Original.png'
 import SmoothenedImage from '../assets/Predicted_annotations_after_smoothing.png'
 import PolyPhonicMusicImage from '../assets/Polyphonic_Midi_music.png'
+import PredictionsForCLSTM from '../assets/Predictions_for_CLSTM.png'
+import MetricsForCVAE from '../assets/Metrics_for_CVAE.png'
+import MetricsForCLSTM from '../assets/Metrics_for_CLSTM.png'
 
 import ActualHumAudio from '../assets/Original_hum.mp3'
 import GeneratedMonophonicAudio from '../assets/Generated_instrumental_music.mp3'
@@ -66,7 +69,36 @@ const LandingPage = () => {
             <span className="text-white text-2xl">Polyphonic music</span>
           </div>
           <div className='w-3/4 h-auto'>
-            <img src={PolyPhonicMusicImage} alt="Smoothened Pitches" className="w-[50%] h-auto" />
+            <img src={PolyPhonicMusicImage} alt="Polyphonic music" className="w-[50%] h-auto" />
+          </div>
+        </div>
+
+        {/* Sixth Row */}
+        <div className="flex items-center space-x-6 mb-8 justify-between">
+          <div className="flex items-center  max-w-80">
+            <div className="min-w-6 min-h-6 bg-white rounded-full mr-4"></div>
+            <span className="text-white text-2xl">CLSTM prediction</span>
+          </div>
+            <img src={PredictionsForCLSTM} alt="CLSTM prediction" className="w-3/4 h-auto" />
+        </div>
+
+        {/* Seventh Row */}
+        <div className="flex items-center space-x-6 mb-8 justify-between">
+          <div className="flex items-center  max-w-80">
+            <div className="min-w-6 min-h-6 bg-white rounded-full mr-4"></div>
+            <span className="text-white text-2xl">CVAE metrics</span>
+          </div>
+            <img src={MetricsForCVAE} alt="CVAE metrics" className="w-3/4 h-auto" />
+        </div>
+
+        {/* Eigth Row */}
+        <div className="flex items-center space-x-6 mb-8 justify-between">
+          <div className="flex items-center  max-w-80">
+            <div className="min-w-6 min-h-6 bg-white rounded-full mr-4"></div>
+            <span className="text-white text-2xl">CLSTM metrics</span>
+          </div>
+          <div className='w-3/4 h-auto'>
+            <img src={MetricsForCLSTM} alt="CLSTM metrics" className="w-3/4 h-auto" />
           </div>
         </div>
 
